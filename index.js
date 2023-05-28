@@ -27,19 +27,26 @@ async function run() {
 
     const menuCollection = client.db('restaurant').collection('menu');
     const reviewCollection = client.db('restaurant').collection('reviews');
+    const cartCollection = client.db('restaurant').collection('carts');
 
 
     app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result)
-    })
+    });
 
 
     app.get('/review', async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result)
-    })
+    });
 
+    app.post('/carts', async (req, res) => {
+      const items = req.body;
+      console.log(items);
+      const result = await cartCollection.insertOne();
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
