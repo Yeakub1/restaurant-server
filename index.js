@@ -25,25 +25,63 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
+    const userCollection = client.db("restaurant").collection("user");
     const menuCollection = client.db("restaurant").collection("menu");
     const reviewCollection = client.db("restaurant").collection("reviews");
     const cartCollection = client.db("restaurant").collection("carts");
 
+    // user reletted apis
+    app.get("/user", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existinngUser = await userCollection.findOne(query);
+      if (existinngUser) {
+        return res.send({ message: "user alrady exist" });
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch('/user/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+       const updateDoc = {
+         $set: {
+           role: 'admin',
+         },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
+    // user deleted reletted apis
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // menu reletted apis
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
 
+    // reviews reletted apis
     app.get("/review", async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
     });
 
-
     // cart collection apis
     app.get("/carts", async (req, res) => {
       const email = req.query.email;
-      console.log(email,'user email');
       if (!email) {
         res.send([]);
       }
@@ -54,17 +92,17 @@ async function run() {
 
     app.post("/carts", async (req, res) => {
       const item = req.body;
-      console.log(item);
       const result = await cartCollection.insertOne(item);
       res.send(result);
     });
 
-    app.delete('/carts/:id', async (req, res) => {
+    // cart deleted reletted apis
+    app.delete("/carts/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
-      res.send(result)
-    }); 
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -77,8 +115,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
 
 app.get('/', (req, res) => {
     res.send('restaurant site is running');
